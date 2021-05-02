@@ -16,7 +16,7 @@ async def on_ready():
         if guild.name == GUILD:
             break
 
-    print('Server Up')
+    print('Server DEAD')
 
 
 #Recive message
