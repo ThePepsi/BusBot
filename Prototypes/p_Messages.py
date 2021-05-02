@@ -18,7 +18,6 @@ async def on_ready():
 
     print('Server Up')
 
-
 #Recive message
 @client.event
 async def on_message(message):
@@ -28,12 +27,16 @@ async def on_message(message):
 
     print(message.content)
 
+    emoji = client.get_emoji(123456)
+    
     if (message.content.startswith('.')):
         if message.content.startswith('.testMsg'):
             print('DM to :'+ str(message.author))
-            txt = 'Test to send DM'
-
-            await message.channel.send('This a Message in the Same Channel')
+            await message.channel.send('This a Message in the Same Channel and not for Vu')
+            #add an reaction to users Message
+            #await message.add_reaction("✅")
             await message.author.send('This is a DM Message')
+           
+
 
 client.run(TOKEN)
