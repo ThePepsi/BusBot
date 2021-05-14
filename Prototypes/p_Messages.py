@@ -35,18 +35,19 @@ async def on_message(message):
             await message.channel.send('This a Message in the Same Channel and not for Vu')
             #add an reaction to users Message
             #await message.add_reaction("✅")
+        
             await message.add_reaction('\N{THUMBS UP SIGN}')
             await message.add_reaction('\N{Playing Card Black Joker}')
             
             #how to remove reactions
-            await message.remove_reaction('\N{Playing Card Black Joker}')
+            await message.remove_reaction('\N{Playing Card Black Joker}',str(message.author))
+            #if member.id == self._state.self_id:
 
             #clear all reactions
-            await message.clear_reaction('\N{Playing Card Black Joker}')
+            #await message.clear_reaction('\N{Playing Card Black Joker}')
 
             await message.author.send('This is a DM Message')
-            await message.add_reaction('\N{THUMBS UP SIGN}')
-            await message.add_reaction('\N{Playing Card Black Joker}')
+            
            
 
 
