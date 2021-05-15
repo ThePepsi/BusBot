@@ -40,7 +40,7 @@ async def on_message(message):
             await message.add_reaction('\N{Playing Card Black Joker}')
             
             #how to remove reactions
-            await message.remove_reaction('\N{Playing Card Black Joker}',str(message.author))
+            await message.remove_reaction('\N{Playing Card Black Joker}',client.user)
             #if member.id == self._state.self_id:
 
             #clear all reactions
