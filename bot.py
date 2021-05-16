@@ -73,10 +73,7 @@ async def on_ready():
             return
 
         if(aktGameMsg == reaction.message and user != client.user and gameStatus == 'init'):
-            print(f'User: {reaction}=>{user} joind the Game.')
-            print(user)
-            print(client.get_user(user.id))
-            
+            print(f'User: {reaction}=>{user} joind the Game.')            
             playerList.append((reaction.emoji,user,user.id))
             return
 
