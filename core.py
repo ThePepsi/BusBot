@@ -7,19 +7,6 @@ class Core:
     def __init__(self):
         self.games = []
 
-    async def initGame(self, channel, guild, host):
-        self.games.append(Game(guild,host))
-        await channel.send('Hi')
-        
-import os
-import discord
-from enum import Enum
-
-class Core:
-    
-    def __init__(self):
-        self.games = []
-
     async def initGame(self, channel, host):
         self.games.append(Game(host,channel))
         
