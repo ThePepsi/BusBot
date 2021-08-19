@@ -1,7 +1,7 @@
 # bot.py
 import os
 import discord
-from core import Core
+from core import Core, Game, GameStatus
 from discord.abc import User
 from discord.reaction import Reaction
 from dotenv import load_dotenv
@@ -29,7 +29,28 @@ def main():
             msg = message.content[len(BOT_PREFIX):]
 
             if msg == 'initGame':
-                await core.initGame(channel=message.channel, guild=message.guild, host=message.author)
+                #TODO: delete old running Game
+                await core.initGame(channel=message.channel, host=message.author)
+
+            core.getGameState(message.channel)
+
+    @client.event
+    async def on_reaction_add(reaction, user):
+        if user.bot:
+            return
+        
+        status: GameStatus = core.getGameState(reaction.message.channel) 
+
+        if status == GameStatus.LOGIN and reaction.emoji == '\U0001F504':
+            await core.prepGame(user, reaction.message.channel)
+        if status == GameStatus.LOGIN and not reaction.emoji == '\U0001F504':
+            #TODO: Dont let 2 people joint with same reaction
+            #TODO: MULTIJOINABLE NOT GOOD
+            #TODO: MaxPlayerCount
+            await core.joinGame(reaction.message.channel, user, reaction)
+        if status == GameStatus.PREP and reaction.emoji == '\U0001F504':
+            pass
+        
 
             
 
