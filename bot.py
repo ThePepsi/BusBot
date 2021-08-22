@@ -23,7 +23,10 @@ def main():
 
     @client.event
     async def on_message(message):
-        print(f'Guild: {message.guild.name} User: {message.author} Message: {message.content}\n')
+        if message.guild:
+            print(f'Guild: {message.guild.name} User: {message.author} Message: {message.content}\n')
+        else:
+            print(f'User: {message.author} Message: {message.content}\n')
 
         if message.content.startswith(BOT_PREFIX):
             msg = message.content[len(BOT_PREFIX):]
@@ -49,7 +52,7 @@ def main():
             #TODO: MaxPlayerCount
             await core.joinGame(reaction.message.channel, user, reaction)
         if status == GameStatus.PREP and reaction.emoji == '\U0001F504':
-            pass
+            await core.rdyGame(reaction.message.channel, user)
         
 
             
