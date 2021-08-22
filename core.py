@@ -1,6 +1,8 @@
 import os
 import discord
 from enum import Enum
+
+from discord.message import Message
 from mGameCore.Deck import Deck
 
 class Core:
@@ -26,21 +28,37 @@ class Core:
         print('Player: ' +str(player)+ ' joined')
 
     async def prepGame(self, user, channel):
-        for game in self.games:
-            if game.channel == channel and game.status != GameStatus.ENDED and game.hostUser == user:
-                game.setStatus(GameStatus.PREP)
-                txt = f'Und los Geht es! Karten werden ausgeteilt! \n Wenn jeder seine Karten hat bitte \U0001F504 drücken. \n Mittspieler sind:\n'
-                for player in game.playerList:
-                    txt = txt + f'{player.emoji} => {player.user}\n'
-                m = await game.channel.send(txt)
-                await m.add_reaction('\U0001F504')
-                for p in game.prepGame():
-                    txt = f'Your Cards are:' + str(p.hand)
-                    await p.user.send(txt)
-                return
+        game = self.getGame(channel)
+        if game.channel == channel and game.status != GameStatus.ENDED and game.hostUser == user:
+            game.setStatus(GameStatus.PREP)
+            txt = f'Und los Geht es! Karten werden ausgeteilt! \n Wenn jeder seine Karten hat bitte \U0001F504 drücken. \n Mittspieler sind:\n'
+            for player in game.playerList:
+                txt = txt + f'{player.emoji} => {player.user}\n'
+            msg = await game.channel.send(txt)
+            await msg.add_reaction('\U0001F504')
+            for player in game.prepGame():
+                txt = f'Your Cards are:' + str(player.hand)
+                dm_msg = await player.user.send(txt)
+                game.add_DMmsg(user, dm_msg)                
+        else:
+            pass
+            #TODO: If should not be wrong
+               
     
-    async def startGame():
-        pass
+    async def rdyGame(self, channel, user):
+        game = self.getGame(channel)
+        await game.del_DMmsg(user).delete()    
+        if game.check_gameStart():
+            game.setStatus(GameStatus.RUNNING)
+            #TODO Pyramid start
+            await self.round(channel)
+
+    async def round(self, channel):
+        game = self.getGame(channel)
+        
+        txt = f"Das ist die pyramide\n'''" + game.ppyramid() + "'''"
+        msg = await game.channel.send(txt)
+        
                 
 
 
@@ -48,7 +66,10 @@ class Core:
         for game in self.games:
             if game.channel == channel and game.status != GameStatus.ENDED:
                 return game.status
-        return GameStatus.NOT       
+        return GameStatus.NOT
+    
+    def getGame(self, channel):
+        return next((game for game in self.games if game.isChannel(channel)), None)
  
 
 
@@ -69,6 +90,7 @@ class Game:
         #GameStuff
         self.deck = Deck()
         self.pyramid = None
+        self.round = 0
 
 
     def setStatus(self, newStatus):
@@ -90,14 +112,51 @@ class Game:
             player.hand = Hand(self.deck.drawCard(),self.deck.drawCard())
         self.pyramid = self.deck.drawPyramid()
         return self.playerList
-        
-            
+    
+    def add_DMmsg(self, user, msg):
+        self.dm_messages.append((user, msg))
+
+    def del_DMmsg(self, user) -> Message:
+        for dmmsg in self.dm_messages:
+            if dmmsg[0] == user:
+                self.dm_messages.remove(dmmsg)
+                return dmmsg[1]
+                
+    
+    def check_gameStart(self):
+        return len(self.dm_messages) == 0
 
 
+    
     def __eq__(self, other):
         return self.channel == other.channel
     def isChannel(self, channel):
         return self.channel == channel
+
+    def card(self):
+        return self.pyramid[round-1]
+
+    def printPyramid(self, anzahl=10):
+        p = self.pyramid
+        c = 9
+        while 10-anzahl != c:
+            p[anzahl] = 'XX'
+            c = c - 1
+        out = "*********************************\n"\
+            "***             "+p[9]+"            ***\n"\
+            "***          "+p[8]+"    "+p[7]+"         ***\n"\
+            "***       "+p[6]+"    "+p[5]+"    "+p[4]+"      ***\n"\
+            "***    "+p[3]+"    "+p[2]+"    "+p[1]+"    "+p[0]+"   ***"
+        return out
+
+    def ppyramid(self):
+        p = ['XX','XX','XX','XX','XX','XX','XX','XX','XX','XX']
+        for i in range(0,self.round):
+            p[i] = self.pyramid[i]
+        return  ""+p[9]+" \n"+p[8]+" "+p[7]+" \n"+p[6]+" "+p[5]+" "+p[4]+" \n"+p[3]+" "+p[2]+" "+p[1]+" "+p[0]
+    
+        
+
 
 class Player:
     def __init__(self, emoji, user, hand):
