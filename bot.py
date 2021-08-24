@@ -53,8 +53,10 @@ def main():
             await core.joinGame(reaction.message.channel, user, reaction)
         if status == GameStatus.PREP and reaction.emoji == '\U0001F504':
             await core.rdyGame(reaction.message.channel, user)
-        
-
+        if status == GameStatus.RUNNING and reaction.emoji == '\U0001F504':
+            await core.round(reaction.message.channel)
+        if status == GameStatus.OVER and reaction.emoji == '\U0001F504':
+            await core.over(reaction.message.channel)
             
 
 

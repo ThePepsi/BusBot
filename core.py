@@ -50,13 +50,19 @@ class Core:
         await game.del_DMmsg(user).delete()    
         if game.check_gameStart():
             game.setStatus(GameStatus.RUNNING)
-            #TODO Pyramid start
-            await self.round(channel)
+            await self.round(channel, start=True)
 
-    async def round(self, channel):
+    async def round(self, channel, start=False):
+        game = self.getGame(channel)
+        (card,pyramid) = game.pppyramid(start=start)
+        txt = f"Die Neue Karte ist: [" + card + "]\nDas ist die Pyramide:" + pyramid + ""
+        msg = await game.channel.send(txt)
+        await msg.add_reaction('\U0001F504')
+
+    async def over(self, channel):
         game = self.getGame(channel)
         
-        txt = f"Das ist die pyramide\n'''" + game.ppyramid() + "'''"
+        txt = f"Game Over"
         msg = await game.channel.send(txt)
         
                 
@@ -134,7 +140,10 @@ class Game:
         return self.channel == channel
 
     def card(self):
-        return self.pyramid[round-1]
+        if self.round == 10:
+            return
+        self.round = self.round + 1
+        return self.pyramid[self.round-1]
 
     def printPyramid(self, anzahl=10):
         p = self.pyramid
@@ -151,9 +160,28 @@ class Game:
 
     def ppyramid(self):
         p = ['XX','XX','XX','XX','XX','XX','XX','XX','XX','XX']
-        for i in range(0,self.round):
+        for i in range(0,self.round-1):
             p[i] = self.pyramid[i]
-        return  ""+p[9]+" \n"+p[8]+" "+p[7]+" \n"+p[6]+" "+p[5]+" "+p[4]+" \n"+p[3]+" "+p[2]+" "+p[1]+" "+p[0]
+        return  "\n"+p[9]+" \n"+p[8]+" "+p[7]+" \n"+p[6]+" "+p[5]+" "+p[4]+" \n"+p[3]+" "+p[2]+" "+p[1]+" "+p[0]
+
+    def pppyramid(self, start=False):
+        p = ['XX','XX','XX','XX','XX','XX','XX','XX','XX','XX']
+        if start:
+            self.round = 0
+            #p[0] = self.pyramid[0]
+        
+        for i in range(0,self.round+1):
+            p[i] = self.pyramid[i]
+        
+        pyramid =  "\n"+p[9]+" \n"+p[8]+" "+p[7]+" \n"+p[6]+" "+p[5]+" "+p[4]+" \n"+p[3]+" "+p[2]+" "+p[1]+" "+p[0]
+        card = self.pyramid[self.round] 
+        self.round = self.round + 1
+        if self.round == 10:
+            self.status = GameStatus.OVER
+        return (card, pyramid)
+
+        
+
     
         
 
@@ -182,4 +210,5 @@ class GameStatus(Enum):
     LOGIN = 2
     PREP = 3
     RUNNING = 4
-    ENDED = 5
+    OVER = 5
+    ENDED = 6
