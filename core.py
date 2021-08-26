@@ -209,9 +209,9 @@ class Game:
             return
         card_number = self.pyramid[self.round-1][1]
         if left and player.hand.left[1] == card_number:
-            player.has_sip = player.has_sip + (1 if self.round >= 9 else 0) + (1 if self.round >= 7 else 0) + (1 if self.round >= 4 else 0) + 1
+            player.has_sip = player.has_sip + (1 if self.round-1 >= 9 else 0) + (1 if self.round-1 >= 7 else 0) + (1 if self.round-1 >= 4 else 0) + 1
         if right and player.hand.right[1] == card_number:
-            player.has_sip = player.has_sip + (1 if self.round >= 9 else 0) + (1 if self.round >= 7 else 0) + (1 if self.round >= 4 else 0) + 1 
+            player.has_sip = player.has_sip + (1 if self.round-1 >= 9 else 0) + (1 if self.round-1 >= 7 else 0) + (1 if self.round-1 >= 4 else 0) + 1 
 
         return player.has_sip
     
