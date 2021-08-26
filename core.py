@@ -10,6 +10,12 @@ class Core:
     def __init__(self):
         self.games = []
 
+        self.emojis = {
+            'next':      '\U0001F504',
+            'left_card': '\U0001F448',
+            'right_card':'\U0001F449',
+        }
+
     async def initGame(self, channel, host):
         game = Game(host,channel)
         self.games.append(game)
@@ -20,12 +26,12 @@ class Core:
          
         game.setStatus(GameStatus.LOGIN)
     
-    async def joinGame(self, channel, player, emoji):
+    async def joinGame(self, channel, user, emoji):
         game = next((game for game in self.games if game.isChannel(channel)), None)
         if game:
-            game.playerJoin(player, emoji)
+            game.playerJoin(user, emoji)
 
-        print('Player: ' +str(player)+ ' joined')
+        print('Player: ' +str(user)+ ' joined')
 
     async def prepGame(self, user, channel):
         game = self.getGame(channel)
@@ -39,7 +45,7 @@ class Core:
             for player in game.prepGame():
                 txt = f'Your Cards are:' + str(player.hand)
                 dm_msg = await player.user.send(txt)
-                game.add_DMmsg(user, dm_msg)                
+                game.add_DMmsg(player.user, dm_msg)                
         else:
             pass
             #TODO: If should not be wrong
@@ -58,13 +64,33 @@ class Core:
         txt = f"Die Neue Karte ist: [" + card + "]\nDas ist die Pyramide:" + pyramid + ""
         msg = await game.channel.send(txt)
         await msg.add_reaction('\U0001F504')
+        await msg.add_reaction(self.emojis['left_card'])
+        await msg.add_reaction(self.emojis['right_card'])
+        
 
     async def over(self, channel):
         game = self.getGame(channel)
         
         txt = f"Game Over"
         msg = await game.channel.send(txt)
-        
+
+    async def p_has_card(self, user, channel, left=False, right=False):
+        print('Here')
+        game = self.getGame(channel)
+        sips = game.check_to_sip(user, left, right)
+        if sips and sips != 0:
+            txt = f'{user.mention} : Darf {str(sips)} verteilen, bitte wähle einen Spieler zum Drinken.'
+            msg = await channel.send(txt)
+            for player in game.playerList:
+                await msg.add_reaction(player.emoji)
+    
+    async def give_sips(self, user, channel, emoji):
+        game = self.getGame(channel=channel)
+        (sips, getplayer) = game.give_sip(user, emoji)
+        txt = f'{getplayer.mention} : Darf {str(sips)} TRINKEN, bedank dich bei {user}'
+        msg = await channel.send(txt)
+
+
                 
 
 
@@ -98,7 +124,6 @@ class Game:
         self.pyramid = None
         self.round = 0
 
-
     def setStatus(self, newStatus):
         self.status = newStatus
 
@@ -127,13 +152,10 @@ class Game:
             if dmmsg[0] == user:
                 self.dm_messages.remove(dmmsg)
                 return dmmsg[1]
-                
-    
+                 
     def check_gameStart(self):
         return len(self.dm_messages) == 0
 
-
-    
     def __eq__(self, other):
         return self.channel == other.channel
     def isChannel(self, channel):
@@ -179,6 +201,34 @@ class Game:
         if self.round == 10:
             self.status = GameStatus.OVER
         return (card, pyramid)
+    
+    def check_to_sip(self, user, left=False, right=False):
+        # returns sipcount
+        player = next((player for player in self.playerList if player.user.id == user.id), None)
+        if not player:
+            return
+        card_number = self.pyramid[self.round-1][1]
+        if left and player.hand.left[1] == card_number:
+            player.has_sip = player.has_sip + (1 if self.round >= 9 else 0) + (1 if self.round >= 7 else 0) + (1 if self.round >= 4 else 0) + 1
+        if right and player.hand.right[1] == card_number:
+            player.has_sip = player.has_sip + (1 if self.round >= 9 else 0) + (1 if self.round >= 7 else 0) + (1 if self.round >= 4 else 0) + 1 
+
+        return player.has_sip
+    
+    def give_sip(self, give_user, get_player_emoji):
+        give_player = next((x for x in self.playerList if x.user.id == give_user.id), None)
+        get_player = next((x for x in self.playerList if x.emoji.emoji == get_player_emoji), None)
+        if not give_player or not get_player:
+            raise TypeError
+        sips = give_player.has_sip
+        give_player.has_sip = 0
+        get_player.drink_sip = get_player.drink_sip + sips
+        return (sips, get_player.user)
+                   
+        
+        
+
+
 
         
 
@@ -191,6 +241,9 @@ class Player:
         self.emoji = emoji
         self.user = user
         self.hand = hand
+
+        self.has_sip = 0
+        self.drink_sip = 0
 
     def __eq__(self, o: object) -> bool:
         return o.user == self.user
