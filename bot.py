@@ -39,7 +39,6 @@ def main():
 
     @client.event
     async def on_reaction_add(reaction, user):
-        print('react')
         if user.bot:
             return
         
@@ -70,7 +69,6 @@ def main():
         if status == GameStatus.OVER and reaction.emoji == core.emojis['next']:
             await core.over(reaction.message.channel)
             return
-        print('ract2')
             
 
 

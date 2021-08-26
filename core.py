@@ -45,7 +45,7 @@ class Core:
             for player in game.prepGame():
                 txt = f'Your Cards are:' + str(player.hand)
                 dm_msg = await player.user.send(txt)
-                game.add_DMmsg(user, dm_msg)                
+                game.add_DMmsg(player.user, dm_msg)                
         else:
             pass
             #TODO: If should not be wrong
@@ -82,12 +82,13 @@ class Core:
             txt = f'{user.mention} : Darf {str(sips)} verteilen, bitte wähle einen Spieler zum Drinken.'
             msg = await channel.send(txt)
             for player in game.playerList:
-                msg.add_reaction(player.emoji)
+                await msg.add_reaction(player.emoji)
     
     async def give_sips(self, user, channel, emoji):
         game = self.getGame(channel=channel)
         (sips, getplayer) = game.give_sip(user, emoji)
         txt = f'{getplayer.mention} : Darf {str(sips)} TRINKEN, bedank dich bei {user}'
+        msg = await channel.send(txt)
 
 
                 
@@ -216,7 +217,7 @@ class Game:
     
     def give_sip(self, give_user, get_player_emoji):
         give_player = next((x for x in self.playerList if x.user.id == give_user.id), None)
-        get_player = next((x for x in self.playerList if x.emoji == get_player_emoji), None)
+        get_player = next((x for x in self.playerList if x.emoji.emoji == get_player_emoji), None)
         if not give_player or not get_player:
             raise TypeError
         sips = give_player.has_sip
