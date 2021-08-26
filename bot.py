@@ -39,24 +39,38 @@ def main():
 
     @client.event
     async def on_reaction_add(reaction, user):
+        print('react')
         if user.bot:
             return
         
         status: GameStatus = core.getGameState(reaction.message.channel) 
 
-        if status == GameStatus.LOGIN and reaction.emoji == '\U0001F504':
+        if status == GameStatus.LOGIN and reaction.emoji == core.emojis['next']:
             await core.prepGame(user, reaction.message.channel)
-        if status == GameStatus.LOGIN and not reaction.emoji == '\U0001F504':
+            return
+        if status == GameStatus.LOGIN and not reaction.emoji == core.emojis['next']:
             #TODO: Dont let 2 people joint with same reaction
             #TODO: MULTIJOINABLE NOT GOOD
             #TODO: MaxPlayerCount
             await core.joinGame(reaction.message.channel, user, reaction)
-        if status == GameStatus.PREP and reaction.emoji == '\U0001F504':
+            return
+        if status == GameStatus.PREP and reaction.emoji == core.emojis['next']:
             await core.rdyGame(reaction.message.channel, user)
-        if status == GameStatus.RUNNING and reaction.emoji == '\U0001F504':
+            return
+        if status == GameStatus.RUNNING and reaction.emoji == core.emojis['next']:
             await core.round(reaction.message.channel)
-        if status == GameStatus.OVER and reaction.emoji == '\U0001F504':
+            return
+        if status == GameStatus.RUNNING and (reaction.emoji == core.emojis['left_card'] or reaction.emoji == core.emojis['right_card']):
+            await core.p_has_card(user, reaction.message.channel, left=(True if reaction.emoji == core.emojis['left_card'] else False), right=(True if reaction.emoji == core.emojis['right_card'] else False))
+            return
+        if status == GameStatus.RUNNING:
+            await core.give_sips(user, reaction.message.channel, reaction.emoji)
+            pass
+            return
+        if status == GameStatus.OVER and reaction.emoji == core.emojis['next']:
             await core.over(reaction.message.channel)
+            return
+        print('ract2')
             
 
 
